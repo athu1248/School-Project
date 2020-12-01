@@ -1,0 +1,23 @@
+CREATE DATABASE tfdb;
+
+USE tfdb;
+
+CREATE TABLE AccDetails (
+Email varchar(50) PRIMARY KEY,
+Password varchar(50) NOT NULL,
+FirstName varchar(50) NOT NULL,
+LastName varchar(60) NOT NULL,
+HighSchool varchar(50),
+UndergraduateSchool varchar(50),
+GraduateSchool varchar(50),
+DOB date NOT NULL,
+Sub1 varchar(20),
+Sub2 varchar(20),
+Sub3 varchar(20),
+Sub4 varchar(20),
+Sub5 varchar(20),
+Test1 varchar(20),
+Test2 varchar(20),
+Test3 varchar(20),
+Test4 varchar(20),
+Test5 varchar(20) );
