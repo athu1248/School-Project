@@ -4,6 +4,7 @@ import mysql.connector as mysql
 import random
 import tkinter
 from tkinter import ttk
+import tkinter.messagebox
 import validators
 
 global testDict
@@ -44,22 +45,37 @@ subjectDict = {
 global subjectList
 subjectList = list(subjectDict.keys())
 
+global monthDict
+monthDict = {
+    "Jan": "1",
+    "Feb": "2",
+    "Mar": "3",
+    "Apr": "4",
+    "May": "5",
+    "Jun": "6",
+    "Jul": "7",
+    "Aug": "8",
+    "Sep": "9",
+    "Oct": "10",
+    "Nov": "11",
+    "Dec": "12",
+}
+global monthList
+monthList = list(monthDict.keys())
+
 global font1
 font1 = ("Verdana", 15, "bold")
 global font2
-font2 = ("Comic Sans MS", 15, "bold")
-global font3
-font3 = ("Comic Sans MS", 15)
-global font4
-font4 = ("Comic Sans MS", 10)
+font2 = ("Comic Sans MS", 15)
+
+global smallfont1
+smallfont1 = ("Verdana", 10, "bold")
+global smallfont2
+smallfont2 = ("Comic Sans MS", 10)
 
 global con
-con = mysql.connect(
-    host="sql12.freemysqlhosting.net",
-    user="sql12378021",
-    passwd="jrP4ygpV8P",
-    database="sql12378021",
-)
+con = mysql.connect(host="computerproject.ctyzmdqqhkym.ap-northeast-1.rds.amazonaws.com",
+                    user="admin", passwd="athuchinlucy", database="tfdb")
 if con.is_connected():
     print("Connection is successfull!!")
 else:
@@ -67,7 +83,7 @@ else:
 
 
 class loginWindow:
-    def __init__(self, window):
+    def __init__(self, window, errorText=""):
         for widget in window.winfo_children():
             widget.destroy()
         window.geometry("1000x500")
@@ -90,39 +106,35 @@ class loginWindow:
         canvas1 = tkinter.Canvas(self.frame1, bg="blue")
         canvas1.pack(fill="both", expand=True)
         canvas1.update()
-        welcomeText1 = canvas1.create_text(
+        welcomeText = canvas1.create_text(
             canvas1.winfo_width() // 2,
             500,
-            text="Welcome To",
+            width=canvas1.winfo_width()-100,
+            justify=tkinter.CENTER,
+            text="Welcome To Student-4-Student!",
             fill="White",
-            font="Verdana 45 bold",
-        )
-        welcomeText2 = canvas1.create_text(
-            canvas1.winfo_width() // 2,
-            555,
-            text="Student-4-Student!",
-            fill="White",
-            font="Verdana 45 bold",
+            font="Verdana 35 bold",
         )
         paratext = canvas1.create_text(
             canvas1.winfo_width() // 2,
-            750,
-            text=" Student-4-Student is an online service where students\ncan either learn or teach a particular subject of their interest.\nOne can also provide details regarding\ncolleges, schools, tests, and courses for\ncollaborative information sharing. As students,\nit isn't easy to find reliable direct information\nabout universities, such as establishing direct\ncontact with a Student currently studying in the\nsame university/school we are researching.",
+            680,
+            width=canvas1.winfo_width()-100,
+            justify=tkinter.CENTER,
+            text="Student-4-Student is an online service where students can either learn or teach a particular subject of their interest. One can also provide details regarding colleges, schools, tests, and courses for collaborative information sharing. As students, it isn't easy to find reliable direct information about universities, such as establishing direct contact with a student currently studying in the same university/school we are planning to apply to.",
             fill="White",
             font="Verdana 15 bold",
         )
         xinc = 0
         yinc = -1
-        # yinc = 0.5
+        #yinc = 0.5
 
         while True:
-            canvas1.move(welcomeText1, xinc, yinc)
-            canvas1.move(welcomeText2, xinc, yinc)
+            canvas1.move(welcomeText, xinc, yinc)
             canvas1.move(paratext, xinc, yinc)
 
             canvas1.update()
 
-            y = canvas1.bbox(welcomeText1)[1]
+            y = canvas1.bbox(welcomeText)[1]
             if y < 50:
                 break
 
@@ -159,11 +171,14 @@ class loginWindow:
 
         self.loginErrlbl = tkinter.Label(
             self.frame2,
+            text=errorText,
             bg="PaleTurquoise1",
             fg="red",
-            font="Verdana 15",
+            font=smallfont1,
             wraplength=self.frame2.winfo_width() - 10,
         )
+        if errorText != "":
+            self.loginErrlbl.pack()
 
         # Adding bubles in frame1
         # bbl1 = tkinter.Canvas.create_oval(canvas1.winfo_height)
@@ -182,7 +197,10 @@ class loginWindow:
         records = cursor.fetchall()
         if len(records) == 1:
             self.loginErrlbl.pack_forget()
-            profileWindow(window, list(records[0]))
+            if records[0][0]=="admstudent4student@gmail.com":
+                adminwindow(window)
+            else:
+                profileWindow(window, list(records[0]))
         else:
             self.loginErrlbl.configure(
                 text="*Incorrect Email or Password. Please try again.*"
@@ -197,7 +215,7 @@ class loginWindow:
 class signupWindow:
     def __init__(self, window):
         window.configure(bg="Blue")
-        window.geometry("1500x500")
+        window.geometry("1200x500")
         for widget in window.winfo_children():
             widget.destroy()
 
@@ -211,33 +229,44 @@ class signupWindow:
             relief=tkinter.GROOVE,
         )
 
+        accLbl = tkinter.Label(
+            self.frame1, text="Please enter your account details", font=font1)
+        accLbl.grid(row=0, column=0, columnspan=2)
+        notelbl = tkinter.Label(
+            self.frame1, text="Note: Email, First Name, and Last Name cannot be changed later.", font=smallfont1, bg="PaleTurquoise2")
+        notelbl.grid(row=1, column=0, columnspan=2)
+
         Emaillbl = tkinter.Label(
-            self.frame1, text="Email:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Email*:", bg="PaleTurquoise1", fg="Blue4", font=font1
         )
-        Emaillbl.grid(row=0, column=0)
+        Emaillbl.grid(row=2, column=0)
         self.Email = tkinter.Entry(self.frame1, font=font2)
-        self.Email.grid(row=0, column=1)
+        self.Email.grid(row=2, column=1)
 
         passwordlbl = tkinter.Label(
-            self.frame1, text="Password:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Password*:", bg="PaleTurquoise1", fg="Blue4", font=font1
         )
-        passwordlbl.grid(row=1, column=0)
+        passwordlbl.grid(row=3, column=0)
         self.Password = tkinter.Entry(self.frame1, show="*", font=font2)
-        self.Password.grid(row=1, column=1)
+        self.Password.grid(row=3, column=1)
 
         firstnamelbl = tkinter.Label(
-            self.frame1, text="First Name:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="First Name*:", bg="PaleTurquoise1", fg="Blue4", font=font1
         )
-        firstnamelbl.grid(row=2, column=0)
+        firstnamelbl.grid(row=4, column=0)
         self.FirstName = tkinter.Entry(self.frame1, font=font2)
-        self.FirstName.grid(row=2, column=1)
+        self.FirstName.grid(row=4, column=1)
 
         lastnamelbl = tkinter.Label(
-            self.frame1, text="Last Name:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Last Name*:", bg="PaleTurquoise1", fg="Blue4", font=font1
         )
-        lastnamelbl.grid(row=3, column=0)
+        lastnamelbl.grid(row=5, column=0)
         self.LastName = tkinter.Entry(self.frame1, font=font2)
-        self.LastName.grid(row=3, column=1)
+        self.LastName.grid(row=5, column=1)
+
+        randomlbl = tkinter.Label(
+            self.frame1, text="* is a required field", font=smallfont2, bg="PaleTurquoise2")
+        randomlbl.grid(row=6, column=0)
 
         self.cancel1 = tkinter.Button(
             self.frame1,
@@ -246,7 +275,7 @@ class signupWindow:
             font=font1,
             command=self.cancelBtnFunc,
         )
-        self.cancel1.grid(row=4, column=0)
+        self.cancel1.grid(row=7, column=0)
 
         self.next1 = tkinter.Button(
             self.frame1,
@@ -255,10 +284,10 @@ class signupWindow:
             font=font1,
             command=self.nextBtnFunc1,
         )
-        self.next1.grid(row=4, column=1)
+        self.next1.grid(row=7, column=1)
 
         self.lblx = tkinter.Label(
-            window, bg="blue", fg="red", font="Verdana 15")
+            window, bg="blue", fg="red", font=smallfont1)
 
         self.frame1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
@@ -272,103 +301,98 @@ class signupWindow:
             relief=tkinter.GROOVE,
         )
 
+        lbl1 = tkinter.Label(self.frame2, text="Enter your qualifications:-",
+                             bg="PaleTurquoise1", fg="Blue4", font=smallfont1)
+        lbl1.grid(row=0, column=0, columnspan=2)
+
         hslbl = tkinter.Label(
             self.frame2,
             text="High School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        hslbl.grid(row=0, column=0)
-        self.Highschool = tkinter.Entry(self.frame2, font=font3)
-        self.Highschool.grid(row=0, column=1)
+        hslbl.grid(row=1, column=0)
+        self.Highschool = tkinter.Entry(self.frame2, font=smallfont2)
+        self.Highschool.grid(row=1, column=1)
 
         uglbl = tkinter.Label(
             self.frame2,
             text="Undergraduate School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        uglbl.grid(row=1, column=0)
-        self.Undergraduate = tkinter.Entry(self.frame2, font=font3)
-        self.Undergraduate.grid(row=1, column=1)
+        uglbl.grid(row=2, column=0)
+        self.Undergraduate = tkinter.Entry(self.frame2, font=smallfont2)
+        self.Undergraduate.grid(row=2, column=1)
 
         glbl = tkinter.Label(
             self.frame2,
             text="Graduate School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        glbl.grid(row=2, column=0)
-        self.Graduate = tkinter.Entry(self.frame2, font=font3)
-        self.Graduate.grid(row=2, column=1)
+        glbl.grid(row=3, column=0)
+        self.Graduate = tkinter.Entry(self.frame2, font=smallfont2)
+        self.Graduate.grid(row=3, column=1)
 
         doblbl = tkinter.Label(
-            self.frame2, text="DOB:-", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Enter your Date of Birth:-", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
-        doblbl.grid(row=3, column=0)
+        doblbl.grid(row=4, column=0, columnspan=2)
 
         yearlbl = tkinter.Label(
             self.frame2,
-            text="Year:",
+            text="Year*:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font="Verdana 15",
+            font=smallfont1,
         )
-        yearlbl.grid(row=4, column=0)
+        yearlbl.grid(row=5, column=0)
         self.Year = ttk.Combobox(
-            self.frame2, values=self.getAllYears(), font=font3)
+            self.frame2, values=self.getAllYears(), font=smallfont2)
         self.Year["state"] = "readonly"
-        self.Year.grid(row=4, column=1)
+        self.Year.grid(row=5, column=1)
         self.Year.bind("<<ComboboxSelected>>", self.disableYear)
         monthlbl = tkinter.Label(
             self.frame2,
-            text="Month:",
+            text="Month*:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font="Verdana 15",
+            font=smallfont1,
         )
-        monthlbl.grid(row=5, column=0)
+        monthlbl.grid(row=6, column=0)
         self.Month = ttk.Combobox(
             self.frame2,
-            values=[
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-            ],
-            font=font3,
+            values=monthList,
+            font=smallfont2
         )
         self.Month["state"] = "disabled"
-        self.Month.grid(row=5, column=1)
+        self.Month.grid(row=6, column=1)
         self.Month.bind("<<ComboboxSelected>>", self.disableMonth)
         daylbl = tkinter.Label(
-            self.frame2, text="Day:", bg="PaleTurquoise1", fg="Blue4", font="Verdana 15"
+            self.frame2, text="Day*:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
-        daylbl.grid(row=6, column=0)
-        self.Day = ttk.Combobox(self.frame2, values=[], font=font3)
+        daylbl.grid(row=7, column=0)
+        self.Day = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Day["state"] = "disabled"
-        self.Day.grid(row=6, column=1)
+        self.Day.grid(row=7, column=1)
         self.Day.bind("<<ComboboxSelected>>", self.disableDay)
 
         self.resetDOBBtn = tkinter.Button(
             self.frame2,
             text="Reset DOB",
             bg="RoyalBlue1",
-            font=font1,
+            font=smallfont1,
             command=self.resetDOB,
         )
-        self.resetDOBBtn.grid(row=7, column=1)
+        self.resetDOBBtn.grid(row=8, column=1)
+
+        randomlbl1 = tkinter.Label(
+            self.frame2, text="* is a required field", font=smallfont2, bg="PaleTurquoise2")
+        randomlbl1.grid(row=8, column=0)
 
         subjectSelectlbl = tkinter.Label(
             self.frame2, text="Select subjects and tests you want to TEACH:", font=font1
@@ -376,95 +400,95 @@ class signupWindow:
         subjectSelectlbl.grid(row=0, column=2, columnspan=4)
 
         sub1lbl = tkinter.Label(
-            self.frame2, text="Subject 1:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Subject 1:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub1lbl.grid(row=1, column=2)
         self.Sub1 = ttk.Combobox(self.frame2, values=[
-                                 "None"] + subjectList, font=font3)
+                                 "None"] + subjectList, font=smallfont2)
         self.Sub1.current(0)
         self.Sub1["state"] = "readonly"
         self.Sub1.grid(row=1, column=3)
         self.Sub1.bind("<<ComboboxSelected>>", self.disableSub1)
 
         sub2lbl = tkinter.Label(
-            self.frame2, text="Subject 2:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Subject 2:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub2lbl.grid(row=2, column=2)
-        self.Sub2 = ttk.Combobox(self.frame2, values=[], font=font3)
+        self.Sub2 = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Sub2["state"] = "disabled"
         self.Sub2.grid(row=2, column=3)
         self.Sub2.bind("<<ComboboxSelected>>", self.disableSub2)
 
         sub3lbl = tkinter.Label(
-            self.frame2, text="Subject 3:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Subject 3:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub3lbl.grid(row=3, column=2)
-        self.Sub3 = ttk.Combobox(self.frame2, values=[], font=font3)
+        self.Sub3 = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Sub3["state"] = "disabled"
         self.Sub3.grid(row=3, column=3)
         self.Sub3.bind("<<ComboboxSelected>>", self.disableSub3)
 
         sub4lbl = tkinter.Label(
-            self.frame2, text="Subject 4:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Subject 4:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub4lbl.grid(row=4, column=2)
-        self.Sub4 = ttk.Combobox(self.frame2, values=[], font=font3)
+        self.Sub4 = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Sub4["state"] = "disabled"
         self.Sub4.grid(row=4, column=3)
         self.Sub4.bind("<<ComboboxSelected>>", self.disableSub4)
 
         sub5lbl = tkinter.Label(
-            self.frame2, text="Subject 5:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Subject 5:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub5lbl.grid(row=5, column=2)
-        self.Sub5 = ttk.Combobox(self.frame2, values=[], font=font3)
+        self.Sub5 = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Sub5["state"] = "disabled"
         self.Sub5.grid(row=5, column=3)
         self.Sub5.bind("<<ComboboxSelected>>", self.disableSub5)
 
         test1lbl = tkinter.Label(
-            self.frame2, text="Test 1:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Test 1:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test1lbl.grid(row=1, column=4)
         self.Test1 = ttk.Combobox(
-            self.frame2, values=["None"] + testList, font=font3)
+            self.frame2, values=["None"] + testList, font=smallfont2)
         self.Test1.current(0)
         self.Test1["state"] = "readonly"
         self.Test1.grid(row=1, column=5)
         self.Test1.bind("<<ComboboxSelected>>", self.disableTest1)
 
         test2lbl = tkinter.Label(
-            self.frame2, text="Test 2:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Test 2:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test2lbl.grid(row=2, column=4)
-        self.Test2 = ttk.Combobox(self.frame2, values=[], font=font3)
+        self.Test2 = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Test2["state"] = "disabled"
         self.Test2.grid(row=2, column=5)
         self.Test2.bind("<<ComboboxSelected>>", self.disableTest2)
 
         test3lbl = tkinter.Label(
-            self.frame2, text="Test 3:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Test 3:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test3lbl.grid(row=3, column=4)
-        self.Test3 = ttk.Combobox(self.frame2, values=[], font=font3)
+        self.Test3 = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Test3["state"] = "disabled"
         self.Test3.grid(row=3, column=5)
         self.Test3.bind("<<ComboboxSelected>>", self.disableTest3)
 
         test4lbl = tkinter.Label(
-            self.frame2, text="Test 4:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Test 4:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test4lbl.grid(row=4, column=4)
-        self.Test4 = ttk.Combobox(self.frame2, values=[], font=font3)
+        self.Test4 = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Test4["state"] = "disabled"
         self.Test4.grid(row=4, column=5)
         self.Test4.bind("<<ComboboxSelected>>", self.disableTest4)
 
         test5lbl = tkinter.Label(
-            self.frame2, text="Test 5:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame2, text="Test 5:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test5lbl.grid(row=5, column=4)
-        self.Test5 = ttk.Combobox(self.frame2, values=[], font=font3)
+        self.Test5 = ttk.Combobox(self.frame2, values=[], font=smallfont2)
         self.Test5["state"] = "disabled"
         self.Test5.grid(row=5, column=5)
         self.Test5.bind("<<ComboboxSelected>>", self.disableTest5)
@@ -473,7 +497,7 @@ class signupWindow:
             self.frame2,
             text="Reset Subjects",
             bg="RoyalBlue1",
-            font=font1,
+            font=smallfont1,
             command=self.resetSubjects,
         )
         self.resetSubsBtn.grid(row=6, column=3)
@@ -482,7 +506,7 @@ class signupWindow:
             self.frame2,
             text="Reset Tests",
             bg="RoyalBlue1",
-            font=font1,
+            font=smallfont1,
             command=self.resetTests,
         )
         self.resetTestsBtn.grid(row=6, column=5)
@@ -506,7 +530,7 @@ class signupWindow:
         self.submit.grid(row=9, column=5)
 
         self.lblx2 = tkinter.Label(
-            window, bg="blue", fg="red", font="Verdana 15")
+            window, bg="blue", fg="red", font=smallfont1)
 
     def getAllYears(self):
         yearList = []
@@ -532,23 +556,6 @@ class signupWindow:
             for i in range(1, 32, 1):
                 dayList.append(i)
         return dayList
-
-    def monthToNum(self, month):
-        monthDict = {
-            "Jan": "1",
-            "Feb": "2",
-            "Mar": "3",
-            "Apr": "4",
-            "May": "5",
-            "Jun": "6",
-            "Jul": "7",
-            "Aug": "8",
-            "Sep": "9",
-            "Oct": "10",
-            "Nov": "11",
-            "Dec": "12",
-        }
-        return monthDict[month]
 
     def nextBtnFunc1(self):
         if self.Email.get() == "":
@@ -585,9 +592,7 @@ class signupWindow:
         else:
             cursor = con.cursor()
             cursor.execute(
-                "SELECT * FROM AccDetails WHERE Email = '{}'".format(
-                    self.Email.get())
-            )
+                "SELECT * FROM AccDetails WHERE Email = '{}'".format(self.Email.get()))
             records = cursor.fetchall()
             cursor.close()
             if len(records) == 0:
@@ -757,7 +762,7 @@ class signupWindow:
             DOB1 = (
                 self.Year.get()
                 + "-"
-                + self.monthToNum(self.Month.get())
+                + monthDict[self.Month.get()]
                 + "-"
                 + self.Day.get()
             )
@@ -825,7 +830,7 @@ class signupWindow:
         cursor = con.cursor()
         try:
             cursor.execute(
-                "INSERT INTO AccDetails values('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                "INSERT INTO AccDetails values('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}', 'no')".format(
                     self.Email.get(),
                     self.Password.get(),
                     self.FirstName.get(),
@@ -850,9 +855,7 @@ class signupWindow:
             con.commit()
 
             cursor.execute(
-                "SELECT * FROM AccDetails WHERE Email='" +
-                str(self.Email.get()) + "';"
-            )
+                "SELECT * FROM AccDetails WHERE Email='" + str(self.Email.get()) + "';")
             records = cursor.fetchall()
             cursor.close()
             if len(records) == 1:
@@ -883,131 +886,12 @@ class profileWindow:
             pady="35",
             relief=tkinter.GROOVE,
         )
-        self.frame1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
-        # 11 columns
-        # Start:3 End:9
-        headinglbl = tkinter.Label(
-            self.frame1, text="Student4Student", font="Verdana 40 bold"
-        )
-        headinglbl.grid(row=0, column=0, columnspan=7)
+        if record[-1] == "no":
+            qualifyLbl = tkinter.Label(window, text="To be searched by other students in Tutot Look-up!, please email certificates of your qualifications to admstudent4student@gmail.com", wraplength=window.winfo_width() - 10, font = smallfont1)
+            qualifyLbl.pack()
 
-        profilelbl = tkinter.Label(self.frame1, text="PROFILE", font=font1)
-        profilelbl.grid(row=1, column=0, columnspan=2, rowspan=2)
-
-        pic = self.profilepic()
-        piclbl = tkinter.Label(self.frame1, image=pic, font=font1)
-        piclbl.image = pic
-        piclbl.grid(row=3, column=0, columnspan=2, rowspan=6)
-
-        # global dataFrame
-        self.dataFrame = tkinter.Frame(self.frame1)
-        self.dataFrame.grid(row=3, column=2, rowspan=6, columnspan=4)
-
-        Emaillbl = tkinter.Label(self.dataFrame, text="Email:", font=font1)
-        Emaillbl.grid(row=1, column=0)
-
-        EmailVallbl = tkinter.Label(
-            self.dataFrame, text=record[0], font="Verdana 15")
-        EmailVallbl.grid(row=1, column=1)
-
-        FirstNameLbl = tkinter.Label(
-            self.dataFrame, text="First Name:", font=font1)
-        FirstNameLbl.grid(row=2, column=0)
-
-        FirstNameValLbl = tkinter.Label(
-            self.dataFrame, text=record[2], font="Verdana 15"
-        )
-        FirstNameValLbl.grid(row=2, column=1)
-
-        LastNameLbl = tkinter.Label(
-            self.dataFrame, text="Last Name:", font=font1)
-        LastNameLbl.grid(row=3, column=0)
-
-        LastNameValLbl = tkinter.Label(
-            self.dataFrame, text=record[3], font="Verdana 15"
-        )
-        LastNameValLbl.grid(row=3, column=1)
-
-        DateLbl = tkinter.Label(self.dataFrame, text="DOB:", font=font1)
-        DateLbl.grid(row=4, column=0)
-
-        DateValLbl = tkinter.Label(
-            self.dataFrame, text=record[7], font="Verdana 15")
-        DateValLbl.grid(row=4, column=1)
-
-        HighschoolLbl = tkinter.Label(
-            self.dataFrame, text="Highschool:", font=font1)
-        HighschoolLbl.grid(row=4, column=0)
-
-        HighschoolValLbl = tkinter.Label(
-            self.dataFrame, text=record[4], font="Verdana 15")
-        HighschoolValLbl.grid(row=4, column=1)
-
-        UndergradLbl = tkinter.Label(
-            self.dataFrame, text="Undergraduate:", font=font1)
-        UndergradLbl.grid(row=5, column=0)
-
-        UndergradValLbl = tkinter.Label(
-            self.dataFrame, text=record[5], font="Verdana 15")
-        UndergradValLbl.grid(row=5, column=1)
-
-        GradLbl = tkinter.Label(
-            self.dataFrame, text="Graduate:", font=font1)
-        GradLbl.grid(row=6, column=0)
-
-        GradValLbl = tkinter.Label(
-            self.dataFrame, text=record[6], font="Verdana 15")
-        GradValLbl.grid(row=6, column=1)
-
-        subPrefLbl = tkinter.Label(
-            self.dataFrame, text="Subject Preferences", font=font1
-        )
-        subPrefLbl.grid(row=0, column=4)
-
-        testPrefLbl = tkinter.Label(
-            self.dataFrame, text="Test Preferences", font=font1)
-        testPrefLbl.grid(row=0, column=5)
-
-        sub1Lbl = tkinter.Label(
-            self.dataFrame, text=record[8], font="Verdana 15")
-        sub1Lbl.grid(row=1, column=4)
-
-        sub2Lbl = tkinter.Label(
-            self.dataFrame, text=record[9], font="Verdana 15")
-        sub2Lbl.grid(row=2, column=4)
-
-        sub3Lbl = tkinter.Label(
-            self.dataFrame, text=record[10], font="Verdana 15")
-        sub3Lbl.grid(row=3, column=4)
-
-        sub4Lbl = tkinter.Label(
-            self.dataFrame, text=record[11], font="Verdana 15")
-        sub4Lbl.grid(row=4, column=4)
-
-        sub5Lbl = tkinter.Label(
-            self.dataFrame, text=record[12], font="Verdana 15")
-        sub5Lbl.grid(row=5, column=4)
-
-        test1Lbl = tkinter.Label(
-            self.dataFrame, text=record[13], font="Verdana 15")
-        test1Lbl.grid(row=1, column=5)
-
-        test2Lbl = tkinter.Label(
-            self.dataFrame, text=record[14], font="Verdana 15")
-        test2Lbl.grid(row=2, column=5)
-
-        test3Lbl = tkinter.Label(
-            self.dataFrame, text=record[15], font="Verdana 15")
-        test3Lbl.grid(row=3, column=5)
-
-        test4Lbl = tkinter.Label(
-            self.dataFrame, text=record[16], font="Verdana 15")
-        test4Lbl.grid(row=4, column=5)
-
-        test5Lbl = tkinter.Label(
-            self.dataFrame, text=record[17], font="Verdana 15")
-        test5Lbl.grid(row=5, column=5)
+        profileFrame(self.frame1, self.record)
 
         tutorlookup = tkinter.Button(
             self.frame1,
@@ -1016,7 +900,7 @@ class profileWindow:
             font=font1,
             command=self.search,
         )
-        tutorlookup.grid(row=9, column=3)
+        tutorlookup.grid(row=9, column=0)
 
         update = tkinter.Button(
             self.frame1,
@@ -1027,14 +911,17 @@ class profileWindow:
         )
         update.grid(row=0, column=8)
 
-        update = tkinter.Button(
+        signOut = tkinter.Button(
             self.frame1,
             text="Sign out",
             bg="RoyalBlue1",
             command=self.signout,
             font=font1,
         )
-        update.grid(row=1, column=8)
+        signOut.grid(row=1, column=8)
+
+        self.frame1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+        self.frame1.update()
 
     def profilepic(self):
         pic1 = tkinter.PhotoImage(file="./pig.png")
@@ -1077,72 +964,76 @@ class updateWindow:
 
         self.frame1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
+        lbl1 = tkinter.Label(self.frame1, text="Enter your qualifications:-",
+                             bg="PaleTurquoise1", fg="Blue4", font=smallfont1)
+        lbl1.grid(row=0, column=0, columnspan=2)
+
         hslbl = tkinter.Label(
             self.frame1,
             text="High School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        hslbl.grid(row=0, column=0)
-        self.Highschool = tkinter.Entry(self.frame1, font=font2)
+        hslbl.grid(row=1, column=0)
+        self.Highschool = tkinter.Entry(self.frame1, font=smallfont2)
         self.Highschool.insert(0, record[4])
-        self.Highschool.grid(row=0, column=1)
+        self.Highschool.grid(row=1, column=1)
 
         uglbl = tkinter.Label(
             self.frame1,
             text="Undergraduate School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        uglbl.grid(row=1, column=0)
-        self.Undergraduate = tkinter.Entry(self.frame1, font=font2)
+        uglbl.grid(row=2, column=0)
+        self.Undergraduate = tkinter.Entry(self.frame1, font=smallfont2)
         self.Undergraduate.insert(0, record[5])
-        self.Undergraduate.grid(row=1, column=1)
+        self.Undergraduate.grid(row=2, column=1)
 
         glbl = tkinter.Label(
             self.frame1,
             text="Graduate School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        glbl.grid(row=2, column=0)
-        self.Graduate = tkinter.Entry(self.frame1, font=font2)
+        glbl.grid(row=3, column=0)
+        self.Graduate = tkinter.Entry(self.frame1, font=smallfont2)
         self.Graduate.insert(0, record[6])
-        self.Graduate.grid(row=2, column=1)
+        self.Graduate.grid(row=3, column=1)
 
         changeplbl = tkinter.Label(
             self.frame1,
             text="Change Password:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        changeplbl.grid(row=4, column=0)
+        changeplbl.grid(row=5, column=0)
 
         oldplbl = tkinter.Label(
             self.frame1,
             text="Old Password:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        oldplbl.grid(row=5, column=0)
-        self.oldPassword = tkinter.Entry(self.frame1, font=font2)
-        self.oldPassword.grid(row=5, column=1)
+        oldplbl.grid(row=6, column=0)
+        self.oldPassword = tkinter.Entry(self.frame1, font=smallfont2)
+        self.oldPassword.grid(row=6, column=1)
 
         newplbl = tkinter.Label(
             self.frame1,
             text="New Password:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
-        newplbl.grid(row=6, column=0)
-        self.newPassword = tkinter.Entry(self.frame1, font=font2)
-        self.newPassword.grid(row=6, column=1)
+        newplbl.grid(row=7, column=0)
+        self.newPassword = tkinter.Entry(self.frame1, font=smallfont2)
+        self.newPassword.grid(row=7, column=1)
 
         subjectSelectlbl = tkinter.Label(
             self.frame1, text="Select subjects and tests you want to TEACH:", font=font1
@@ -1150,81 +1041,91 @@ class updateWindow:
         subjectSelectlbl.grid(row=0, column=2, columnspan=4)
 
         sub1lbl = tkinter.Label(
-            self.frame1, text="Subject 1:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Subject 1:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub1lbl.grid(row=1, column=2)
-        self.Sub1 = ttk.Combobox(self.frame1, values=["None"] + subjectList)
+        self.Sub1 = ttk.Combobox(self.frame1, values=[
+                                 "None"] + subjectList, font=smallfont2)
         self.Sub1.grid(row=1, column=3)
         self.Sub1.bind("<<ComboboxSelected>>", self.disableSub1)
 
         sub2lbl = tkinter.Label(
-            self.frame1, text="Subject 2:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Subject 2:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub2lbl.grid(row=2, column=2)
-        self.Sub2 = ttk.Combobox(self.frame1, values=["None"] + subjectList)
+        self.Sub2 = ttk.Combobox(self.frame1, values=[
+                                 "None"] + subjectList, font=smallfont2)
         self.Sub2.grid(row=2, column=3)
         self.Sub2.bind("<<ComboboxSelected>>", self.disableSub2)
 
         sub3lbl = tkinter.Label(
-            self.frame1, text="Subject 3:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Subject 3:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub3lbl.grid(row=3, column=2)
-        self.Sub3 = ttk.Combobox(self.frame1, values=["None"] + subjectList)
+        self.Sub3 = ttk.Combobox(self.frame1, values=[
+                                 "None"] + subjectList, font=smallfont2)
         self.Sub3.grid(row=3, column=3)
         self.Sub3.bind("<<ComboboxSelected>>", self.disableSub3)
 
         sub4lbl = tkinter.Label(
-            self.frame1, text="Subject 4:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Subject 4:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub4lbl.grid(row=4, column=2)
-        self.Sub4 = ttk.Combobox(self.frame1, values=["None"] + subjectList)
+        self.Sub4 = ttk.Combobox(self.frame1, values=[
+                                 "None"] + subjectList, font=smallfont2)
         self.Sub4.grid(row=4, column=3)
         self.Sub4.bind("<<ComboboxSelected>>", self.disableSub4)
 
         sub5lbl = tkinter.Label(
-            self.frame1, text="Subject 5:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Subject 5:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         sub5lbl.grid(row=5, column=2)
-        self.Sub5 = ttk.Combobox(self.frame1, values=["None"] + subjectList)
+        self.Sub5 = ttk.Combobox(self.frame1, values=[
+                                 "None"] + subjectList, font=smallfont2)
         self.Sub5.grid(row=5, column=3)
 
         test1lbl = tkinter.Label(
-            self.frame1, text="Test 1:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Test 1:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test1lbl.grid(row=1, column=4)
-        self.Test1 = ttk.Combobox(self.frame1, values=["None"] + testList)
+        self.Test1 = ttk.Combobox(
+            self.frame1, values=["None"] + testList, font=smallfont2)
         self.Test1.grid(row=1, column=5)
         self.Test1.bind("<<ComboboxSelected>>", self.disableTest1)
 
         test2lbl = tkinter.Label(
-            self.frame1, text="Test 2:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Test 2:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test2lbl.grid(row=2, column=4)
-        self.Test2 = ttk.Combobox(self.frame1, values=["None"] + testList)
+        self.Test2 = ttk.Combobox(
+            self.frame1, values=["None"] + testList, font=smallfont2)
         self.Test2.grid(row=2, column=5)
         self.Test2.bind("<<ComboboxSelected>>", self.disableTest2)
 
         test3lbl = tkinter.Label(
-            self.frame1, text="Test 3:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Test 3:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test3lbl.grid(row=3, column=4)
-        self.Test3 = ttk.Combobox(self.frame1, values=["None"] + testList)
+        self.Test3 = ttk.Combobox(
+            self.frame1, values=["None"] + testList, font=smallfont2)
         self.Test3.grid(row=3, column=5)
         self.Test3.bind("<<ComboboxSelected>>", self.disableTest3)
 
         test4lbl = tkinter.Label(
-            self.frame1, text="Test 4:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Test 4:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test4lbl.grid(row=4, column=4)
-        self.Test4 = ttk.Combobox(self.frame1, values=["None"] + testList)
+        self.Test4 = ttk.Combobox(
+            self.frame1, values=["None"] + testList, font=smallfont2)
         self.Test4.grid(row=4, column=5)
         self.Test4.bind("<<ComboboxSelected>>", self.disableTest4)
 
         test5lbl = tkinter.Label(
-            self.frame1, text="Test 5:", bg="PaleTurquoise1", fg="Blue4", font=font1
+            self.frame1, text="Test 5:", bg="PaleTurquoise1", fg="Blue4", font=smallfont1
         )
         test5lbl.grid(row=5, column=4)
-        self.Test5 = ttk.Combobox(self.frame1, values=["None"] + testList)
+        self.Test5 = ttk.Combobox(
+            self.frame1, values=["None"] + testList, font=smallfont2)
         self.Test5.grid(row=5, column=5)
 
         self.curValue()
@@ -1233,7 +1134,7 @@ class updateWindow:
             self.frame1,
             text="Reset Subjects",
             bg="RoyalBlue1",
-            font=font1,
+            font=smallfont1,
             command=self.resetSubjects,
         )
         self.resetSubsBtn.grid(row=6, column=3)
@@ -1242,7 +1143,7 @@ class updateWindow:
             self.frame1,
             text="Reset Tests",
             bg="RoyalBlue1",
-            font=font1,
+            font=smallfont1,
             command=self.resetTests,
         )
         self.resetTestsBtn.grid(row=6, column=5)
@@ -1264,6 +1165,15 @@ class updateWindow:
             command=self.checkupdate,
         )
         self.submit.grid(row=9, column=5)
+
+        self.deleteBtn = tkinter.Button(
+            self.frame1,
+            text="Delete Account",
+            bg="RoyalBlue1",
+            font=font1,
+            command=self.delete,
+        )
+        self.deleteBtn.grid(row=9, column=4)
 
         self.lblx = tkinter.Label(window, bg="blue", fg="red")
 
@@ -1306,11 +1216,7 @@ class updateWindow:
                     else:
                         self.Sub4.current(subjectDict[record1[3]])
                         self.Sub4["state"] = "disabled"
-                        if (
-                            record1[4] == "None"
-                            or record1[4] == None
-                            or record1[4] == ""
-                        ):
+                        if record1[4] == "None" or record1[4] == None or record1[4] == "":
                             self.disableSub4()
                             self.Sub5.current(0)
                             self.Sub5["state"] = "readonly"
@@ -1355,11 +1261,7 @@ class updateWindow:
                     else:
                         self.Test4.current(testDict[record1[8]])
                         self.Test4["state"] = "disabled"
-                        if (
-                            record1[9] == "None"
-                            or record1[9] == None
-                            or record1[9] == ""
-                        ):
+                        if record1[9] == "None" or record1[9] == None or record1[9] == "":
                             self.disableTest4()
                             self.Test5.current(0)
                             self.Test5["state"] = "readonly"
@@ -1511,6 +1413,26 @@ class updateWindow:
                 text="*Graduate is too long (50 character limit)*")
             self.lblx.pack()
         elif self.checkPassword():
+            request = False
+
+            hs = self.Highschool.get()
+            if hs == self.record[4]:
+                pass
+            else:
+                request = True
+
+            us = self.Undergraduate.get()
+            if us == self.record[5]:
+                pass
+            else:
+                request = True
+
+            gs = self.Graduate.get()
+            if gs == self.record[6]:
+                pass
+            else:
+                request = True
+
             S1 = self.Sub1.get()
             if S1 == "None" or S1 == "":
                 S1 = ""
@@ -1557,6 +1479,7 @@ class updateWindow:
                 T3,
                 T4,
                 T5,
+                request
             )
 
     def update(
@@ -1574,41 +1497,76 @@ class updateWindow:
         Test3,
         Test4,
         Test5,
+        request
     ):
+        
         cursor1 = con.cursor()
-        cursor1.execute(
-            "UPDATE AccDetails SET Password='{}', FirstName= '{}', LastName='{}', HighSchool = '{}' ,UndergraduateSchool='{}',GraduateSchool='{}',DOB='{}',Sub1='{}',Sub2='{}',Sub3='{}',Sub4='{}',Sub5='{}',Test1='{}',Test2='{}',Test3='{}',Test4='{}',Test5='{}' WHERE Email = '{}'".format(
-                self.record[1],
-                self.record[2],
-                self.record[3],
-                Highschool,
-                Undergraduate,
-                Graduate,
-                self.record[7],
-                Sub1,
-                Sub2,
-                Sub3,
-                Sub4,
-                Sub5,
-                Test1,
-                Test2,
-                Test3,
-                Test4,
-                Test5,
-                self.record[0],
+        if request == False:
+            cursor1.execute(
+                "UPDATE AccDetails SET Password='{}', FirstName= '{}', LastName='{}', HighSchool = '{}' ,UndergraduateSchool='{}',GraduateSchool='{}',DOB='{}',Sub1='{}',Sub2='{}',Sub3='{}',Sub4='{}',Sub5='{}',Test1='{}',Test2='{}',Test3='{}',Test4='{}',Test5='{}' WHERE Email = '{}'".format(
+                    self.record[1],
+                    self.record[2],
+                    self.record[3],
+                    Highschool,
+                    Undergraduate,
+                    Graduate,
+                    self.record[7],
+                    Sub1,
+                    Sub2,
+                    Sub3,
+                    Sub4,
+                    Sub5,
+                    Test1,
+                    Test2,
+                    Test3,
+                    Test4,
+                    Test5,
+                    self.record[0],
+                )
             )
-        )
+        else:
+            cursor1.execute(
+                "UPDATE AccDetails SET Password='{}', FirstName= '{}', LastName='{}', HighSchool = '{}' ,UndergraduateSchool='{}',GraduateSchool='{}',DOB='{}',Sub1='{}',Sub2='{}',Sub3='{}',Sub4='{}',Sub5='{}',Test1='{}',Test2='{}',Test3='{}',Test4='{}',Test5='{}', Qualified = 'no' WHERE Email = '{}'".format(
+                    self.record[1],
+                    self.record[2],
+                    self.record[3],
+                    Highschool,
+                    Undergraduate,
+                    Graduate,
+                    self.record[7],
+                    Sub1,
+                    Sub2,
+                    Sub3,
+                    Sub4,
+                    Sub5,
+                    Test1,
+                    Test2,
+                    Test3,
+                    Test4,
+                    Test5,
+                    self.record[0],
+                )
+            )
 
         con.commit()
 
         cursor1.execute(
-            "SELECT * FROM AccDetails WHERE Email='" +
-            str(self.record[0]) + "';"
-        )
+            "SELECT * FROM AccDetails WHERE Email='" + str(self.record[0]) + "';")
         records = cursor1.fetchall()
         cursor1.close()
         if len(records) == 1:
             profileWindow(window, list(records[0]))
+
+    def delete(self):
+        result = tkinter.messagebox.askquestion(
+            'Delete', 'Are you sure you want to delete your account?')
+        if result == 'yes':
+            cursor = con.cursor()
+            sql = "DELETE FROM AccDetails WHERE Email= '{}';".format(self.record[0])
+            cursor.execute(sql)
+            con.commit()
+            cursor.close()
+            loginWindow(window, "Account has been succesfully deleted!")
 
 
 class Checkbar(tkinter.Frame):
@@ -1618,7 +1576,7 @@ class Checkbar(tkinter.Frame):
         for pick in picks:
             var = tkinter.StringVar()
             chk = tkinter.Checkbutton(
-                self, text=pick, variable=var, offvalue=None, onvalue=pick, font=font4
+                self, text=pick, variable=var, offvalue=None, onvalue=pick, font=smallfont2
             )
             chk.deselect()
             chk.pack(side=tkinter.LEFT, anchor=tkinter.W, expand=tkinter.YES)
@@ -1628,74 +1586,10 @@ class Checkbar(tkinter.Frame):
         return map((lambda var: var.get()), self.vars)
 
 
-class contactAccFrame(tkinter.Frame):
-    def __init__(self, window, record):
-        tkinter.Frame.__init__(
-            self,
-            window,
-            bg="Blue4",
-            highlightbackground="black",
-            highlightthickness="2",
-        )
-
-        pic = self.profilepic()
-        piclbl = tkinter.Label(self, image=pic, font=font1)
-        piclbl.image = pic
-        piclbl.grid(row=0, column=0, columnspan=2, rowspan=6)
-
-        Emaillbl = tkinter.Label(
-            self, text="Email:", font=font1, bg="PaleTurquoise1")
-        Emaillbl.grid(row=0, column=2)
-
-        EmailVallbl = tkinter.Label(
-            self, text=record[0], font="Verdana 15", bg="PaleTurquoise1"
-        )
-        EmailVallbl.grid(row=0, column=3)
-
-        FirstNameLbl = tkinter.Label(
-            self, text="First Name:", font=font1, bg="PaleTurquoise1"
-        )
-        FirstNameLbl.grid(row=1, column=2)
-
-        FirstNameValLbl = tkinter.Label(
-            self, text=record[2], font="Verdana 15", bg="PaleTurquoise1"
-        )
-        FirstNameValLbl.grid(row=1, column=3)
-
-        LastNameLbl = tkinter.Label(
-            self, text="Last Name:", font=font1, bg="PaleTurquoise1"
-        )
-        LastNameLbl.grid(row=2, column=2)
-
-        LastNameValLbl = tkinter.Label(
-            self, text=record[3], font="Verdana 15", bg="PaleTurquoise1"
-        )
-        LastNameValLbl.grid(row=2, column=3)
-
-        DateLbl = tkinter.Label(
-            self, text="DOB:", font=font1, bg="PaleTurquoise1")
-        DateLbl.grid(row=3, column=2)
-
-        DateValLbl = tkinter.Label(
-            self, text=record[7], font="Verdana 15", bg="PaleTurquoise1"
-        )
-        DateValLbl.grid(row=3, column=3)
-
-    def profilepic(self):
-        pic1 = tkinter.PhotoImage(file="./pig.png")
-        pic2 = tkinter.PhotoImage(file="./bear.png")
-        pic3 = tkinter.PhotoImage(file="./elephant.png")
-        pic4 = tkinter.PhotoImage(file="./horse.png")
-        pic5 = tkinter.PhotoImage(file="./dog.png")
-        lst = [pic1, pic2, pic3, pic4, pic5]
-        pic = random.choice(lst)
-        return pic
-
-
 class searchWindow:
     def __init__(self, window, record):
         window.configure(bg="Blue")
-        window.geometry("1200x700")
+        window.geometry("1300x700")
         for widget in window.winfo_children():
             widget.destroy()
 
@@ -1705,42 +1599,40 @@ class searchWindow:
             window,
             bg="Yellow",
             borderwidth="1",
-            padx="25",
-            pady="35",
             relief=tkinter.GROOVE,
         )
         self.frame2 = tkinter.Frame(
             window,
             bg="Pink",
             borderwidth="1",
-            padx="25",
-            pady="35",
             relief=tkinter.GROOVE,
         )
-        self.frame1.place(relx=0, relwidth=0.4, relheight=1)
+        self.frame1.place(relx=0, relwidth=0.3, relheight=1)
+
+        self.headinglbl = tkinter.Label(
+            self.frame1, text="Search tutors by:", font=font1)
+        self.headinglbl.grid(row=0, column=0)
 
         self.sublbl = tkinter.Label(
-            self.frame1, text="By subjects:", font=font1, bg="PaleTurquoise1"
-        )
-        self.sublbl.grid(row=0, column=0)
+            self.frame1, text="By subjects:", font=smallfont1, bg="PaleTurquoise1")
+        self.sublbl.grid(row=1, column=0)
 
         i = 0
-        row1 = 1
+        row1 = 2
         self.CheckBars = []
         while True:
             length1 = len(subjectList)
             if i >= length1:
                 break
             else:
-                subCheckBar = Checkbar(self.frame1, subjectList[i: i + 3])
+                subCheckBar = Checkbar(self.frame1, subjectList[i:i+3])
                 subCheckBar.grid(row=row1, column=0)
                 i += 3
                 row1 += 1
                 self.CheckBars.append(subCheckBar)
 
         self.testlbl = tkinter.Label(
-            self.frame1, text="By tests:", font=font1, bg="PaleTurquoise1"
-        )
+            self.frame1, text="By tests:", font=smallfont1, bg="PaleTurquoise1")
         self.testlbl.grid(row=row1, column=0)
         row1 += 1
         i = 0
@@ -1750,15 +1642,14 @@ class searchWindow:
                 break
             else:
                 testCheckBar = tkinter.Variable()
-                testCheckBar = Checkbar(self.frame1, testList[i: i + 3])
+                testCheckBar = Checkbar(self.frame1, testList[i:i+3])
                 testCheckBar.grid(row=row1, column=0)
                 i += 3
                 row1 += 1
                 self.CheckBars.append(testCheckBar)
 
         self.schoollbl = tkinter.Label(
-            self.frame1, text="By schools:", font=font1, bg="PaleTurquoise1"
-        )
+            self.frame1, text="By schools:", font=smallfont1, bg="PaleTurquoise1")
         self.schoollbl.grid(row=row1, column=0)
         row1 += 1
 
@@ -1767,11 +1658,11 @@ class searchWindow:
             text="High School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
         hslbl.grid(row=row1, column=0)
         row1 += 1
-        self.Highschool = tkinter.Entry(self.frame1, font=font1)
+        self.Highschool = tkinter.Entry(self.frame1, font=smallfont2)
         self.Highschool.grid(row=row1, column=0)
         row1 += 1
 
@@ -1780,11 +1671,11 @@ class searchWindow:
             text="Undergraduate School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
         uglbl.grid(row=row1, column=0)
         row1 += 1
-        self.Undergraduate = tkinter.Entry(self.frame1, font=font1)
+        self.Undergraduate = tkinter.Entry(self.frame1, font=smallfont2)
         self.Undergraduate.grid(row=row1, column=0)
         row1 += 1
 
@@ -1793,27 +1684,25 @@ class searchWindow:
             text="Graduate School:",
             bg="PaleTurquoise1",
             fg="Blue4",
-            font=font1,
+            font=smallfont1,
         )
         glbl.grid(row=row1, column=0)
         row1 += 1
-        self.Graduate = tkinter.Entry(self.frame1, font="Verdana 15")
+        self.Graduate = tkinter.Entry(self.frame1, font=smallfont2)
         self.Graduate.grid(row=row1, column=0)
         row1 += 1
 
         self.enterBtn = tkinter.Button(
-            self.frame1, text="Search", font=font1, command=self.search
-        )
+            self.frame1, text="Search", font=font1, command=self.search)
         self.enterBtn.grid(sticky=tkinter.S)
 
         self.enterBtn = tkinter.Button(
-            self.frame1, text="Go back", font=font1, command=self.goback
-        )
+            self.frame1, text="Go back", font=font1, command=self.goback)
         self.enterBtn.grid(sticky=tkinter.S)
 
         # FRAME 2
 
-        self.frame2.place(relx=0.4, relwidth=0.6, relheight=1)
+        self.frame2.place(relx=0.3, relwidth=0.7, relheight=1)
 
     def getData(self):
         checkBoxes = list(self.CheckBars)
@@ -1847,13 +1736,15 @@ class searchWindow:
     def search(self):
         cursor = con.cursor()
         cursor.execute(
-            "SELECT Email, HighSchool, UndergraduateSchool, GraduateSchool, Sub1, Sub2, Sub3, Sub4, Sub5, Test1, Test2, Test3, Test4, Test5 FROM AccDetails;"
+            "SELECT Email, HighSchool, UndergraduateSchool, GraduateSchool, Sub1, Sub2, Sub3, Sub4, Sub5, Test1, Test2, Test3, Test4, Test5 FROM AccDetails WHERE Qualified = 'yes';"
         )
         tosearch = self.getData()
         searchList = []
         records = cursor.fetchall()
         for record in records:
             if record[0] == self.record1[0]:
+                pass
+            elif record[0] == "admstudent4student@gmail.com":
                 pass
             else:
                 check = all(item in record[1:] for item in tosearch)
@@ -1871,37 +1762,283 @@ class searchWindow:
         for widget in widgets:
             widget.destroy()
 
-        self.canvas1 = tkinter.Canvas(self.frame2)
-        self.canvas1.pack(side=tkinter.LEFT, fill="both", expand=True)
-        self.canvas1.update()
+        # FOR THE SCROLL BARS
+        # 1. Create A Main Frame
+        main_frame = tkinter.Frame(self.frame2)
+        main_frame.pack(fill=tkinter.BOTH, expand=1)
+        # 2. Create A Canvas
+        canvas1 = tkinter.Canvas(main_frame)
+        canvas1.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=1)
+        #canvas1.pack(anchor="nw", fill=tkinter.BOTH, expand = 1)
+        # 3. Add a scroll bar to the Canvas
+        scrollv = ttk.Scrollbar(
+            main_frame, orient=tkinter.VERTICAL, command=canvas1.yview)
+        scrollv.pack(side=tkinter.LEFT, fill="y")
+        #scrollv.pack(side=tkinter.RIGHT, anchor="ne", fill="y")
+        #scrollh = ttk.Scrollbar(main_frame, orient=tkinter.HORIZONTAL, command=canvas1.xview)
+        #scrollh.pack(side=tkinter.BOTTOM, fill="x", anchor="sw")
+        # 4. Configure to canvas
+        #canvas1.configure(xscrollcommand=scrollh.set, yscrollcommand=scrollv.set)
+        canvas1.configure(yscrollcommand=scrollv.set)
+        canvas1.bind("<Configure>", lambda e: canvas1.configure(
+            scrollregion=canvas1.bbox("all")))
+        # Cretae ANOTHER Frame INSIDE the Canvas
+        second_frame = tkinter.Frame(canvas1)
+        # Add the New Frame to a Window in the Canvas
+        canvas1.create_window((0, 0), window=second_frame, anchor="nw")
 
-        self.scroll = ttk.Scrollbar(
-            self.frame2, orient="vertical", command=self.canvas1.yview
-        )
-        self.scroll.pack(side=tkinter.RIGHT, fill="y")
-
-        self.canvas1.bind(
-            "<Configure>",
-            lambda e: self.canvas1.configure(
-                scrollregion=self.canvas1.bbox("all")),
-        )
-
-        self.myframe = tkinter.Frame(self.canvas1)
-        self.canvas1.create_window((0, 0), window=self.myframe)
         i = 0
         for record in resultList:
-            accFrame = contactAccFrame(self.myframe, record)
+            accFrame = tkinter.Frame(
+                second_frame, bg="Blue4", highlightbackground="black", highlightthickness="2")
+            profileFrame(accFrame, record, smallfont1, smallfont2)
             accFrame.pack(side=tkinter.TOP, padx=5, pady=20)
             i += 1
-
-        self.canvas1.configure(yscrollcommand=self.scroll.set)
-        self.canvas1.configure(scrollregion=self.canvas1.bbox("all"))
 
     def goback(self):
         profileWindow(window, self.record1)
 
 
+class profileFrame:
+    def __init__(self, window, record, font1=font1, font2=font2):
+        self.record = record
+
+        profilelbl = tkinter.Label(
+            window, text="PROFILE", font=font1)
+        profilelbl.grid(row=0, column=0, columnspan=2, rowspan=2)
+
+        pic = self.profilepic()
+        piclbl = tkinter.Label(window, image=pic, font=font1)
+        piclbl.image = pic
+        piclbl.grid(row=1, column=0, columnspan=2, rowspan=6)
+
+        self.dataFrame = tkinter.Frame(window)
+        self.dataFrame.grid(row=1, column=2, rowspan=6, columnspan=4)
+
+        Emaillbl = tkinter.Label(
+            self.dataFrame, text="Email:", font=font1)
+        Emaillbl.grid(row=0, column=0)
+
+        EmailVallbl = tkinter.Label(
+            self.dataFrame, text=record[0], font=font2)
+        EmailVallbl.grid(row=0, column=1)
+
+        FirstNameLbl = tkinter.Label(
+            self.dataFrame, text="First Name:", font=font1
+        )
+        FirstNameLbl.grid(row=1, column=0)
+
+        FirstNameValLbl = tkinter.Label(
+            self.dataFrame, text=record[2], font=font2
+        )
+        FirstNameValLbl.grid(row=1, column=1)
+
+        LastNameLbl = tkinter.Label(
+            self.dataFrame, text="Last Name:", font=font1
+        )
+        LastNameLbl.grid(row=2, column=0)
+
+        LastNameValLbl = tkinter.Label(
+            self.dataFrame, text=record[3], font=font2
+        )
+        LastNameValLbl.grid(row=2, column=1)
+
+        DateLbl = tkinter.Label(
+            self.dataFrame, text="DOB:", font=font1)
+        DateLbl.grid(row=3, column=0)
+
+        rdate = str(record[7])
+        month = monthList[int(rdate[5:7])-1] # Months from 1-12 but lists start at 0
+        date = rdate[0:5] + month + rdate[7:]
+        DateValLbl = tkinter.Label(
+            self.dataFrame, text=date, font=font2)
+        DateValLbl.grid(row=3, column=1)
+
+        HighschoolLbl = tkinter.Label(
+            self.dataFrame, text="Highschool:", font=font1)
+        HighschoolLbl.grid(row=4, column=0)
+
+        HighschoolValLbl = tkinter.Label(
+            self.dataFrame, text=record[4], font=font2)
+        HighschoolValLbl.grid(row=4, column=1)
+
+        UndergradLbl = tkinter.Label(
+            self.dataFrame, text="Undergraduate:", font=font1)
+        UndergradLbl.grid(row=5, column=0)
+
+        UndergradValLbl = tkinter.Label(
+            self.dataFrame, text=record[5], font=font2)
+        UndergradValLbl.grid(row=5, column=1)
+
+        GradLbl = tkinter.Label(
+            self.dataFrame, text="Graduate:", font=font1)
+        GradLbl.grid(row=6, column=0)
+
+        GradValLbl = tkinter.Label(
+            self.dataFrame, text=record[6], font=font2)
+        GradValLbl.grid(row=6, column=1)
+
+        subPrefLbl = tkinter.Label(
+            self.dataFrame, text="Subject Preferences", font=font1
+        )
+        subPrefLbl.grid(row=0, column=4)
+
+        testPrefLbl = tkinter.Label(
+            self.dataFrame, text="Test Preferences", font=font1
+        )
+        testPrefLbl.grid(row=0, column=5)
+
+        sub1Lbl = tkinter.Label(
+            self.dataFrame, text=record[8], font=font2)
+        sub1Lbl.grid(row=1, column=4)
+
+        sub2Lbl = tkinter.Label(
+            self.dataFrame, text=record[9], font=font2)
+        sub2Lbl.grid(row=2, column=4)
+
+        sub3Lbl = tkinter.Label(
+            self.dataFrame, text=record[10], font=font2)
+        sub3Lbl.grid(row=3, column=4)
+
+        sub4Lbl = tkinter.Label(
+            self.dataFrame, text=record[11], font=font2)
+        sub4Lbl.grid(row=4, column=4)
+
+        sub5Lbl = tkinter.Label(
+            self.dataFrame, text=record[12], font=font2)
+        sub5Lbl.grid(row=5, column=4)
+
+        test1Lbl = tkinter.Label(
+            self.dataFrame, text=record[13], font=font2)
+        test1Lbl.grid(row=1, column=5)
+
+        test2Lbl = tkinter.Label(
+            self.dataFrame, text=record[14], font=font2)
+        test2Lbl.grid(row=2, column=5)
+
+        test3Lbl = tkinter.Label(
+            self.dataFrame, text=record[15], font=font2)
+        test3Lbl.grid(row=3, column=5)
+
+        test4Lbl = tkinter.Label(
+            self.dataFrame, text=record[16], font=font2)
+        test4Lbl.grid(row=4, column=5)
+
+        test5Lbl = tkinter.Label(
+            self.dataFrame, text=record[17], font=font2)
+        test5Lbl.grid(row=5, column=5)
+
+    def profilepic(self):
+        pic1 = tkinter.PhotoImage(file="./pig.png")
+        pic2 = tkinter.PhotoImage(file="./bear.png")
+        pic3 = tkinter.PhotoImage(file="./elephant.png")
+        pic4 = tkinter.PhotoImage(file="./horse.png")
+        pic5 = tkinter.PhotoImage(file="./dog.png")
+        lst = [pic1, pic2, pic3, pic4, pic5]
+        pic = random.choice(lst)
+        return pic
+
+
+class adminwindow:
+    def __init__(self, window):
+        widgets = window.winfo_children()
+        for widget in widgets:
+            widget.destroy()
+        """
+        self.frame1 = tkinter.Frame(
+            window,
+            bg="Yellow",
+            borderwidth="1",
+            relief=tkinter.GROOVE,
+        )
+        """
+
+        #self.frame1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER, fill=tkinter.BOTH, expand=1)
+        # FOR THE SCROLL BARS
+        # 1. Create A Main Frame
+        main_frame = tkinter.Frame(window)
+        main_frame.pack(fill=tkinter.BOTH, expand=1)
+        # 2. Create A Canvas
+        canvas1 = tkinter.Canvas(main_frame)
+        canvas1.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=1)
+        #canvas1.pack(anchor="nw", fill=tkinter.BOTH, expand = 1)
+        # 3. Add a scroll bar to the Canvas
+        scrollv = ttk.Scrollbar(
+            main_frame, orient=tkinter.VERTICAL, command=canvas1.yview)
+        scrollv.pack(side=tkinter.LEFT, fill="y")
+        #scrollv.pack(side=tkinter.RIGHT, anchor="ne", fill="y")
+        #scrollh = ttk.Scrollbar(main_frame, orient=tkinter.HORIZONTAL, command=canvas1.xview)
+        #scrollh.pack(side=tkinter.BOTTOM, fill="x", anchor="sw")
+        # 4. Configure to canvas
+        #canvas1.configure(xscrollcommand=scrollh.set, yscrollcommand=scrollv.set)
+        canvas1.configure(yscrollcommand=scrollv.set)
+        canvas1.bind("<Configure>", lambda e: canvas1.configure(
+            scrollregion=canvas1.bbox("all")))
+        # Cretae ANOTHER Frame INSIDE the Canvas
+        second_frame = tkinter.Frame(canvas1)
+        # Add the New Frame to a Window in the Canvas
+        canvas1.create_window((0, 0), window=second_frame, anchor="nw")
+
+        i = 0
+        cursor=con.cursor()
+        cursor.execute("SELECT * FROM AccDetails WHERE qualified='no'")
+        resultList=cursor.fetchall()
+        cursor.close()
+        self.tickBtnList = []
+        for record in resultList:
+            #list1 = []
+            """
+            accFrame = tkinter.Frame(second_frame, bg="Blue4", highlightbackground="black", highlightthickness="2")
+            profileFrame(accFrame, record, smallfont1, smallfont2)
+            tickBtn = tkinter.Button(accFrame, text="Yes", font=font1, command = self.tick)
+            tickBtn.record1 = record
+            tickBtn.grid(row=0, rowspan=7, column=6)
+            self.tickBtnList.append(tickBtn)
+            crossBtn = tkinter.Button(accFrame, text="Yes", font=font1)
+            crossBtn.grid(row=0, rowspan=7, column=7)
+            accFrame.pack(side=tkinter.TOP, padx=5, pady=20)
+            """
+            accFrame(second_frame, record)
+
+            i += 1  
+
+        signOut = tkinter.Button(
+            main_frame,
+            text="Sign out",
+            bg="RoyalBlue1",
+            command=self.signout,
+            font=font1,
+        )
+        signOut.pack(side=tkinter.RIGHT)
+    
+    def signout(self):
+        loginWindow(window)
+
+
+class accFrame:
+    def __init__(self, frame1, record):
+        self.record1 = record
+        self.theFrame = tkinter.Frame(frame1, bg="Blue4", highlightbackground="black", highlightthickness="2")
+        profileFrame(self.theFrame, record, smallfont1, smallfont2)
+        self.tickBtn = tkinter.Button(self.theFrame, text="Yes", font=font1, command = self.tick)
+        self.tickBtn.grid(row=0, rowspan=7, column=6)
+        #self.tickBtnList.append(tickBtn)
+        self.crossBtn = tkinter.Button(self.theFrame, text="No", font=font1)
+        self.crossBtn.grid(row=0, rowspan=7, column=7)
+        self.theFrame.pack(side=tkinter.TOP, padx=5, pady=20)
+    
+    def tick(self):
+        cursor = con.cursor()
+        cursor.execute("UPDATE AccDetails SET Qualified = 'yes' WHERE Email = '{}'".format(self.record1[0]))
+        con.commit()
+        #cursor.execute("SELECT * FROM AccDetails;")
+        #result = cursor.fetchall()
+        #print(result)
+        cursor.close()
+        adminwindow(window)
+
 window = tkinter.Tk()
 window.title("Student4Student!")
 loginWindow(window)
 window.mainloop()
+con.close()
