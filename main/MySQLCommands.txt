@@ -20,4 +20,5 @@ Test1 varchar(20),
 Test2 varchar(20),
 Test3 varchar(20),
 Test4 varchar(20),
-Test5 varchar(20) );
+Test5 varchar(20),
+Qualificatoins varchar(3) DEFAULT 'no' );

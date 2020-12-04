@@ -197,7 +197,7 @@ class loginWindow:
         records = cursor.fetchall()
         if len(records) == 1:
             self.loginErrlbl.pack_forget()
-            if records[0][0]=="admstudent4student@gmail.com":
+            if records[0][0] == "admin":
                 adminwindow(window)
             else:
                 profileWindow(window, list(records[0]))
@@ -888,7 +888,8 @@ class profileWindow:
         )
 
         if record[-1] == "no":
-            qualifyLbl = tkinter.Label(window, text="To be searched by other students in Tutot Look-up!, please email certificates of your qualifications to admstudent4student@gmail.com", wraplength=window.winfo_width() - 10, font = smallfont1)
+            qualifyLbl = tkinter.Label(window, text="To be searched by other students in Tutor Look-up!, please email certificates of your qualifications to admstudent4student@gmail.com",
+                                       wraplength=window.winfo_width() - 10, font=smallfont1)
             qualifyLbl.pack()
 
         profileFrame(self.frame1, self.record)
@@ -1499,7 +1500,7 @@ class updateWindow:
         Test5,
         request
     ):
-        
+
         cursor1 = con.cursor()
         if request == False:
             cursor1.execute(
@@ -1562,7 +1563,8 @@ class updateWindow:
             'Delete', 'Are you sure you want to delete your account?')
         if result == 'yes':
             cursor = con.cursor()
-            sql = "DELETE FROM AccDetails WHERE Email= '{}';".format(self.record[0])
+            sql = "DELETE FROM AccDetails WHERE Email= '{}';".format(
+                self.record[0])
             cursor.execute(sql)
             con.commit()
             cursor.close()
@@ -1744,7 +1746,7 @@ class searchWindow:
         for record in records:
             if record[0] == self.record1[0]:
                 pass
-            elif record[0] == "admstudent4student@gmail.com":
+            elif record[0] == "admin":
                 pass
             else:
                 check = all(item in record[1:] for item in tosearch)
@@ -1848,7 +1850,8 @@ class profileFrame:
         DateLbl.grid(row=3, column=0)
 
         rdate = str(record[7])
-        month = monthList[int(rdate[5:7])-1] # Months from 1-12 but lists start at 0
+        # Months from 1-12 but lists start at 0
+        month = monthList[int(rdate[5:7])-1]
         date = rdate[0:5] + month + rdate[7:]
         DateValLbl = tkinter.Label(
             self.dataFrame, text=date, font=font2)
@@ -1980,9 +1983,9 @@ class adminwindow:
         canvas1.create_window((0, 0), window=second_frame, anchor="nw")
 
         i = 0
-        cursor=con.cursor()
+        cursor = con.cursor()
         cursor.execute("SELECT * FROM AccDetails WHERE qualified='no'")
-        resultList=cursor.fetchall()
+        resultList = cursor.fetchall()
         cursor.close()
         self.tickBtnList = []
         for record in resultList:
@@ -2000,7 +2003,7 @@ class adminwindow:
             """
             accFrame(second_frame, record)
 
-            i += 1  
+            i += 1
 
         signOut = tkinter.Button(
             main_frame,
@@ -2010,7 +2013,7 @@ class adminwindow:
             font=font1,
         )
         signOut.pack(side=tkinter.RIGHT)
-    
+
     def signout(self):
         loginWindow(window)
 
@@ -2018,24 +2021,28 @@ class adminwindow:
 class accFrame:
     def __init__(self, frame1, record):
         self.record1 = record
-        self.theFrame = tkinter.Frame(frame1, bg="Blue4", highlightbackground="black", highlightthickness="2")
+        self.theFrame = tkinter.Frame(
+            frame1, bg="Blue4", highlightbackground="black", highlightthickness="2")
         profileFrame(self.theFrame, record, smallfont1, smallfont2)
-        self.tickBtn = tkinter.Button(self.theFrame, text="Yes", font=font1, command = self.tick)
+        self.tickBtn = tkinter.Button(
+            self.theFrame, text="Yes", font=font1, command=self.tick)
         self.tickBtn.grid(row=0, rowspan=7, column=6)
         #self.tickBtnList.append(tickBtn)
         self.crossBtn = tkinter.Button(self.theFrame, text="No", font=font1)
         self.crossBtn.grid(row=0, rowspan=7, column=7)
         self.theFrame.pack(side=tkinter.TOP, padx=5, pady=20)
-    
+
     def tick(self):
         cursor = con.cursor()
-        cursor.execute("UPDATE AccDetails SET Qualified = 'yes' WHERE Email = '{}'".format(self.record1[0]))
+        cursor.execute(
+            "UPDATE AccDetails SET Qualified = 'yes' WHERE Email = '{}'".format(self.record1[0]))
         con.commit()
         #cursor.execute("SELECT * FROM AccDetails;")
         #result = cursor.fetchall()
         #print(result)
         cursor.close()
         adminwindow(window)
+
 
 window = tkinter.Tk()
 window.title("Student4Student!")

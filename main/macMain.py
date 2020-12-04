@@ -74,8 +74,8 @@ global smallfont2
 smallfont2 = ("Comic Sans MS", 15)
 
 global con
-con = mysql.connect(host="localhost",
-                    user="root", passwd="root", database="tfdb")
+con = mysql.connect(host="computerproject.ctyzmdqqhkym.ap-northeast-1.rds.amazonaws.com",
+                    user="admin", passwd="athuchinlucy", database="tfdb")
 if con.is_connected():
     print("Connection is successfull!!")
 else:
@@ -113,7 +113,7 @@ class loginWindow:
             justify=tkinter.CENTER,
             text="Welcome To Student-4-Student!",
             fill="White",
-            font="Verdana 50 bold",
+            font="Verdana 40 bold",
         )
         paratext = canvas1.create_text(
             canvas1.winfo_width() // 2,
@@ -122,7 +122,7 @@ class loginWindow:
             justify=tkinter.CENTER,
             text="Student-4-Student is an online service where students can either learn or teach a particular subject of their interest. One can also provide details regarding colleges, schools, tests, and courses for collaborative information sharing. As students, it isn't easy to find reliable direct information about universities, such as establishing direct contact with a student currently studying in the same university/school we are planning to apply to.",
             fill="White",
-            font="Verdana 15 bold",
+            font="Verdana 20 bold",
         )
         xinc = 0
         yinc = -1
@@ -197,7 +197,10 @@ class loginWindow:
         records = cursor.fetchall()
         if len(records) == 1:
             self.loginErrlbl.pack_forget()
-            profileWindow(window, list(records[0]))
+            if records[0][0] == "admin":
+                adminwindow(window)
+            else:
+                profileWindow(window, list(records[0]))
         else:
             self.loginErrlbl.configure(
                 text="*Incorrect Email or Password. Please try again.*"
@@ -827,7 +830,7 @@ class signupWindow:
         cursor = con.cursor()
         try:
             cursor.execute(
-                "INSERT INTO AccDetails values('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                "INSERT INTO AccDetails values('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}', 'no')".format(
                     self.Email.get(),
                     self.Password.get(),
                     self.FirstName.get(),
@@ -884,6 +887,11 @@ class profileWindow:
             relief=tkinter.GROOVE,
         )
 
+        if record[-1] == "no":
+            qualifyLbl = tkinter.Label(window, text="To be searched by other students in Tutor Look-up!, please email certificates of your qualifications to admstudent4student@gmail.com",
+                                       wraplength=window.winfo_width() - 10, font=smallfont1)
+            qualifyLbl.pack()
+
         profileFrame(self.frame1, self.record)
 
         tutorlookup = tkinter.Button(
@@ -904,14 +912,14 @@ class profileWindow:
         )
         update.grid(row=0, column=8)
 
-        update = tkinter.Button(
+        signOut = tkinter.Button(
             self.frame1,
             text="Sign out",
             bg="RoyalBlue1",
             command=self.signout,
             font=font1,
         )
-        update.grid(row=1, column=8)
+        signOut.grid(row=1, column=8)
 
         self.frame1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
         self.frame1.update()
@@ -1406,6 +1414,26 @@ class updateWindow:
                 text="*Graduate is too long (50 character limit)*")
             self.lblx.pack()
         elif self.checkPassword():
+            request = False
+
+            hs = self.Highschool.get()
+            if hs == self.record[4]:
+                pass
+            else:
+                request = True
+
+            us = self.Undergraduate.get()
+            if us == self.record[5]:
+                pass
+            else:
+                request = True
+
+            gs = self.Graduate.get()
+            if gs == self.record[6]:
+                pass
+            else:
+                request = True
+
             S1 = self.Sub1.get()
             if S1 == "None" or S1 == "":
                 S1 = ""
@@ -1452,6 +1480,7 @@ class updateWindow:
                 T3,
                 T4,
                 T5,
+                request
             )
 
     def update(
@@ -1469,30 +1498,56 @@ class updateWindow:
         Test3,
         Test4,
         Test5,
+        request
     ):
+
         cursor1 = con.cursor()
-        cursor1.execute(
-            "UPDATE AccDetails SET Password='{}', FirstName= '{}', LastName='{}', HighSchool = '{}' ,UndergraduateSchool='{}',GraduateSchool='{}',DOB='{}',Sub1='{}',Sub2='{}',Sub3='{}',Sub4='{}',Sub5='{}',Test1='{}',Test2='{}',Test3='{}',Test4='{}',Test5='{}' WHERE Email = '{}'".format(
-                self.record[1],
-                self.record[2],
-                self.record[3],
-                Highschool,
-                Undergraduate,
-                Graduate,
-                self.record[7],
-                Sub1,
-                Sub2,
-                Sub3,
-                Sub4,
-                Sub5,
-                Test1,
-                Test2,
-                Test3,
-                Test4,
-                Test5,
-                self.record[0],
+        if request == False:
+            cursor1.execute(
+                "UPDATE AccDetails SET Password='{}', FirstName= '{}', LastName='{}', HighSchool = '{}' ,UndergraduateSchool='{}',GraduateSchool='{}',DOB='{}',Sub1='{}',Sub2='{}',Sub3='{}',Sub4='{}',Sub5='{}',Test1='{}',Test2='{}',Test3='{}',Test4='{}',Test5='{}' WHERE Email = '{}'".format(
+                    self.record[1],
+                    self.record[2],
+                    self.record[3],
+                    Highschool,
+                    Undergraduate,
+                    Graduate,
+                    self.record[7],
+                    Sub1,
+                    Sub2,
+                    Sub3,
+                    Sub4,
+                    Sub5,
+                    Test1,
+                    Test2,
+                    Test3,
+                    Test4,
+                    Test5,
+                    self.record[0],
+                )
             )
-        )
+        else:
+            cursor1.execute(
+                "UPDATE AccDetails SET Password='{}', FirstName= '{}', LastName='{}', HighSchool = '{}' ,UndergraduateSchool='{}',GraduateSchool='{}',DOB='{}',Sub1='{}',Sub2='{}',Sub3='{}',Sub4='{}',Sub5='{}',Test1='{}',Test2='{}',Test3='{}',Test4='{}',Test5='{}', Qualified = 'no' WHERE Email = '{}'".format(
+                    self.record[1],
+                    self.record[2],
+                    self.record[3],
+                    Highschool,
+                    Undergraduate,
+                    Graduate,
+                    self.record[7],
+                    Sub1,
+                    Sub2,
+                    Sub3,
+                    Sub4,
+                    Sub5,
+                    Test1,
+                    Test2,
+                    Test3,
+                    Test4,
+                    Test5,
+                    self.record[0],
+                )
+            )
 
         con.commit()
 
@@ -1508,7 +1563,8 @@ class updateWindow:
             'Delete', 'Are you sure you want to delete your account?')
         if result == 'yes':
             cursor = con.cursor()
-            sql = "DELETE FROM Accdetails WHERE Email= '{}';".format(self.record[0])
+            sql = "DELETE FROM AccDetails WHERE Email= '{}';".format(
+                self.record[0])
             cursor.execute(sql)
             con.commit()
             cursor.close()
@@ -1682,13 +1738,15 @@ class searchWindow:
     def search(self):
         cursor = con.cursor()
         cursor.execute(
-            "SELECT Email, HighSchool, UndergraduateSchool, GraduateSchool, Sub1, Sub2, Sub3, Sub4, Sub5, Test1, Test2, Test3, Test4, Test5 FROM AccDetails;"
+            "SELECT Email, HighSchool, UndergraduateSchool, GraduateSchool, Sub1, Sub2, Sub3, Sub4, Sub5, Test1, Test2, Test3, Test4, Test5 FROM AccDetails WHERE Qualified = 'yes';"
         )
         tosearch = self.getData()
         searchList = []
         records = cursor.fetchall()
         for record in records:
             if record[0] == self.record1[0]:
+                pass
+            elif record[0] == "admin":
                 pass
             else:
                 check = all(item in record[1:] for item in tosearch)
@@ -1792,7 +1850,8 @@ class profileFrame:
         DateLbl.grid(row=3, column=0)
 
         rdate = str(record[7])
-        month = monthList[int(rdate[5:7])-1] # Months from 1-12 but lists start at 0
+        # Months from 1-12 but lists start at 0
+        month = monthList[int(rdate[5:7])-1]
         date = rdate[0:5] + month + rdate[7:]
         DateValLbl = tkinter.Label(
             self.dataFrame, text=date, font=font2)
@@ -1881,6 +1940,108 @@ class profileFrame:
         lst = [pic1, pic2, pic3, pic4, pic5]
         pic = random.choice(lst)
         return pic
+
+
+class adminwindow:
+    def __init__(self, window):
+        widgets = window.winfo_children()
+        for widget in widgets:
+            widget.destroy()
+        """
+        self.frame1 = tkinter.Frame(
+            window,
+            bg="Yellow",
+            borderwidth="1",
+            relief=tkinter.GROOVE,
+        )
+        """
+
+        #self.frame1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER, fill=tkinter.BOTH, expand=1)
+        # FOR THE SCROLL BARS
+        # 1. Create A Main Frame
+        main_frame = tkinter.Frame(window)
+        main_frame.pack(fill=tkinter.BOTH, expand=1)
+        # 2. Create A Canvas
+        canvas1 = tkinter.Canvas(main_frame)
+        canvas1.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=1)
+        #canvas1.pack(anchor="nw", fill=tkinter.BOTH, expand = 1)
+        # 3. Add a scroll bar to the Canvas
+        scrollv = ttk.Scrollbar(
+            main_frame, orient=tkinter.VERTICAL, command=canvas1.yview)
+        scrollv.pack(side=tkinter.LEFT, fill="y")
+        #scrollv.pack(side=tkinter.RIGHT, anchor="ne", fill="y")
+        #scrollh = ttk.Scrollbar(main_frame, orient=tkinter.HORIZONTAL, command=canvas1.xview)
+        #scrollh.pack(side=tkinter.BOTTOM, fill="x", anchor="sw")
+        # 4. Configure to canvas
+        #canvas1.configure(xscrollcommand=scrollh.set, yscrollcommand=scrollv.set)
+        canvas1.configure(yscrollcommand=scrollv.set)
+        canvas1.bind("<Configure>", lambda e: canvas1.configure(
+            scrollregion=canvas1.bbox("all")))
+        # Cretae ANOTHER Frame INSIDE the Canvas
+        second_frame = tkinter.Frame(canvas1)
+        # Add the New Frame to a Window in the Canvas
+        canvas1.create_window((0, 0), window=second_frame, anchor="nw")
+
+        i = 0
+        cursor = con.cursor()
+        cursor.execute("SELECT * FROM AccDetails WHERE qualified='no'")
+        resultList = cursor.fetchall()
+        cursor.close()
+        self.tickBtnList = []
+        for record in resultList:
+            #list1 = []
+            """
+            accFrame = tkinter.Frame(second_frame, bg="Blue4", highlightbackground="black", highlightthickness="2")
+            profileFrame(accFrame, record, smallfont1, smallfont2)
+            tickBtn = tkinter.Button(accFrame, text="Yes", font=font1, command = self.tick)
+            tickBtn.record1 = record
+            tickBtn.grid(row=0, rowspan=7, column=6)
+            self.tickBtnList.append(tickBtn)
+            crossBtn = tkinter.Button(accFrame, text="Yes", font=font1)
+            crossBtn.grid(row=0, rowspan=7, column=7)
+            accFrame.pack(side=tkinter.TOP, padx=5, pady=20)
+            """
+            accFrame(second_frame, record)
+
+            i += 1
+
+        signOut = tkinter.Button(
+            main_frame,
+            text="Sign out",
+            bg="RoyalBlue1",
+            command=self.signout,
+            font=font1,
+        )
+        signOut.pack(side=tkinter.RIGHT)
+
+    def signout(self):
+        loginWindow(window)
+
+
+class accFrame:
+    def __init__(self, frame1, record):
+        self.record1 = record
+        self.theFrame = tkinter.Frame(
+            frame1, bg="Blue4", highlightbackground="black", highlightthickness="2")
+        profileFrame(self.theFrame, record, smallfont1, smallfont2)
+        self.tickBtn = tkinter.Button(
+            self.theFrame, text="Yes", font=font1, command=self.tick)
+        self.tickBtn.grid(row=0, rowspan=7, column=6)
+        #self.tickBtnList.append(tickBtn)
+        self.crossBtn = tkinter.Button(self.theFrame, text="No", font=font1)
+        self.crossBtn.grid(row=0, rowspan=7, column=7)
+        self.theFrame.pack(side=tkinter.TOP, padx=5, pady=20)
+
+    def tick(self):
+        cursor = con.cursor()
+        cursor.execute(
+            "UPDATE AccDetails SET Qualified = 'yes' WHERE Email = '{}'".format(self.record1[0]))
+        con.commit()
+        #cursor.execute("SELECT * FROM AccDetails;")
+        #result = cursor.fetchall()
+        #print(result)
+        cursor.close()
+        adminwindow(window)
 
 
 window = tkinter.Tk()
